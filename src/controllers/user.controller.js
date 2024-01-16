@@ -209,9 +209,30 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
             .cookie("Refresh Token", RefreshToken, options)
             .cookie("AccessToken", AccessToken, options)
             .json(new ApiResponse(200, {}, "Send new Access Token"));
+
     } catch (error) {
         throw new ApiError(400, "ERROR IN DECODED\n\n\n\n", error)
     }
+
+
+})
+
+export const changeCurrentPassword = asyncHandler(async (req, res) => {
+
+    const { oldPassword, newPassword } = req.body
+
+    const { _id } = req.user;
+
+    const user = await User.findOne(_id);
+
+    if (!user) throw new ApiError(404, "Bad Request You are not logged")
+
+    if (!await user.isPasswordCorrect(oldPassword)) throw new ApiError(404, "Old Password is incorrect")
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(201).json(new ApiResponse(201, {}, "Password is changed"))
 
 
 })
