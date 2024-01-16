@@ -236,3 +236,31 @@ export const changeCurrentPassword = asyncHandler(async (req, res) => {
 
 
 })
+
+export const getCurrentUser = asyncHandler(async (req, res) => {
+    return res.status(200).json(new ApiResponse(200, req.user, "successfully send user"))
+})
+
+
+export const updateAccountDetails = asyncHandler(async (req, res) => {
+
+    // Have to add more flieds later
+    const { fullName, email, } = req.body;
+    const { _id } = req.user;
+
+    if (!fullName || !email) throw new ApiError(400, "Atlest one flieds is required");
+
+    const user = await User.findByIdAndUpdate(_id, {
+        $set: {
+            email,
+            fullName
+        }
+    }
+        , { new: true }
+
+    ).select("-password")
+
+    return res.status(200)
+        .json(new ApiResponse(200, user, "Account Updated"))
+
+})
