@@ -221,7 +221,8 @@ export const changeCurrentPassword = asyncHandler(async (req, res) => {
 
     const { oldPassword, newPassword } = req.body
 
-    const { _id } = req.user;
+    const { _id } = req.user[0];
+
 
     const user = await User.findOne(_id);
 
@@ -242,6 +243,53 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 
+export const updateAvatar = asyncHandler(async (req, res) => {
+    // geting files in req object because of multer middleware
+    const avatarLocalPath = req.file?.path;
+    if (!avatarLocalPath) throw new ApiError(400, "Avatar file not saved");
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    if (!avatar.url) throw new ApiError(500, "File not saved in cloudinary server");
+
+    const { _id } = req.user[0];
+    
+    const user = await User.findByIdAndUpdate(_id,
+        {
+            $set: {
+                avatar: avatar.url
+            },
+        },
+        { new: true }  // new:true returns the updated doc 
+    )
+    
+    res.status(200).json(new ApiResponse(200, { user }, "Avatar Image updated"))
+})
+
+export const updateCoverImage = asyncHandler(async (req, res) => {
+    // geting files in req object because of multer middleware
+
+    const CoverImagePath = req.file?.path;
+    if (!avatarLocalPath) throw new ApiError(400, "CoverImage file not saved");
+
+    const CoverImage = await uploadOnCloudinary(CoverImagePath);
+
+    if (!CoverImage.url) throw new ApiError(500, "File not saved in cloudinary server");
+
+    const user = await User.findByIdAndUpdate(req.user?._id,
+        {
+            $set: {
+                coverImage: CoverImage.url
+            },
+        },
+        { new: true }  // new:true returns the updated doc 
+    )
+    res
+        .status(200)
+        .json(new ApiResponse(200, user, "Cover Image updated"))
+
+})
+
 export const updateAccountDetails = asyncHandler(async (req, res) => {
 
     // Have to add more flieds later
@@ -260,7 +308,8 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
 
     ).select("-password")
 
-    return res.status(200)
+    return res
+        .status(200)
         .json(new ApiResponse(200, user, "Account Updated"))
 
 })
