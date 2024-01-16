@@ -2,7 +2,7 @@ import { asyncHandler } from './../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { ApiResponse } from '../utils/ApiResponse.js';
-
+import jwt from 'jsonwebtoken'
 // Model import
 import { User } from "../models/user.model.js"
 
@@ -11,7 +11,6 @@ import { User } from "../models/user.model.js"
 const generateAccessAndRefreshToken = async (userId) => {
     try {
         const user = await User.findById(userId);
-        console.log(user)
 
         // creating Token using methods which are define in the schema of the userSchema in user.model.js file
 
@@ -28,9 +27,6 @@ const generateAccessAndRefreshToken = async (userId) => {
         throw new ApiError(500, "Server ERROR while generation token")
     }
 }
-
-
-
 
 
 export const registerUser = asyncHandler(async (req, res) => {
@@ -155,7 +151,6 @@ export const loginUser = asyncHandler(async (req, res) => {
         secure: true
     }
 
-    console.log(AccessToken)
     return res.status(200).
         cookie("AccessToken", AccessToken, options).
         cookie("RefreshToken", RefreshToken, options).
@@ -168,10 +163,7 @@ export const loginUser = asyncHandler(async (req, res) => {
             "User logged In Successfully"))
 })
 
-
 export const logoutUer = asyncHandler(async (req, res) => {
-
-
 
     const user = await User.findByIdAndUpdate(
         req.user._id, {
@@ -190,6 +182,36 @@ export const logoutUer = asyncHandler(async (req, res) => {
         .clearCookie("AccessToken", options)
         .clearCookie("RefreshToken", options)
         .json(new ApiResponse(200, {}, "User logout"))
+})
+
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+
+    const incomingRefreshToken = req.cookies.RefreshToken || req.body.RefreshToken
+
+    if (!incomingRefreshToken) throw new ApiError(401, "unauthorized request");
+
+    try {
+        const { _id } = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+        const user = await User.findOne({ $and: [{ _id }, { RefreshToken: incomingRefreshToken }] });
+
+        if (!user) throw new ApiError(404, "Bad Request");
+
+        const { AccessToken, RefreshToken } = await generateAccessAndRefreshToken(user._id)
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        res
+            .status(200)
+            .cookie("Refresh Token", RefreshToken, options)
+            .cookie("AccessToken", AccessToken, options)
+            .json(new ApiResponse(200, {}, "Send new Access Token"));
+    } catch (error) {
+        throw new ApiError(400, "ERROR IN DECODED\n\n\n\n", error)
+    }
 
 
 })
