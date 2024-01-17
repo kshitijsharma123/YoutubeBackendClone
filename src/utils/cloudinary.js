@@ -10,6 +10,7 @@ cloudinary.config({
 
 
 const uploadFileOnCloudinary = async (localFilePath) => {
+
     try {
         if (!localFilePath) return null;
         // upload file on cloudinary
@@ -36,8 +37,11 @@ const deleteFileOnCloudinary = async (avatarURL) => {
         const urlParts = avatarURL.split('/');
         const filenameWithExtension = urlParts[urlParts.length - 1];
         const public_id = filenameWithExtension.replace(/\.[^/.]+$/, '');
-        await cloudinary.uploader.destroy(public_id);
+        const res = await cloudinary.uploader.destroy(public_id);
 
+
+        if(res.result!=="ok") return false
+        
     } catch (error) {
         console.log("ERROR While deleting the file on CLoudinary\n\n\n\n", error);
     }

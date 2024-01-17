@@ -82,7 +82,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     // Uploading file {avatar image,coverImage} to the cloudinary server 
     const avatar = await uploadFileOnCloudinary(avatarLocalPath);
     const coverImage = await uploadFileOnCloudinary(coverImageLocalPath);
-    
+
     // checking file is uploaded {checking avatar only because it is required field}
 
     if (!avatar) {
@@ -253,7 +253,10 @@ export const updateAvatar = asyncHandler(async (req, res) => {
     const newAvatar = await uploadFileOnCloudinary(avatarLocalPath);
 
     if (!newAvatar.url) throw new ApiError(500, "File not saved in cloudinary server");
-    await deleteFileOnCloudinary(avatar)
+
+    // deleting the file on cloudinary
+    const fileDelele = await deleteFileOnCloudinary(avatar)
+    if (!fileDelele === false) throw new ApiError(500, "Internal Server error while delete Olad Avatar")
 
     const user = await User.findByIdAndUpdate(_id,
         {
@@ -271,16 +274,25 @@ export const updateCoverImage = asyncHandler(async (req, res) => {
     // geting files in req object because of multer middleware
 
     const CoverImagePath = req.file?.path;
-    if (!avatarLocalPath) throw new ApiError(400, "CoverImage file not saved");
+    const { _id, coverImage } = req.user[0];
 
-    const CoverImage = await uploadOnCloudinary(CoverImagePath);
+    if (!CoverImagePath) throw new ApiError(400, "CoverImage file not saved");
 
-    if (!CoverImage.url) throw new ApiError(500, "File not saved in cloudinary server");
+    const newCoverImage = await uploadFileOnCloudinary(CoverImagePath);
 
-    const user = await User.findByIdAndUpdate(req.user?._id,
+    if (!newCoverImage.url) throw new ApiError(500, "File not saved in cloudinary server");
+
+    if (coverImage) {
+        const fileDelele = await deleteFileOnCloudinary(coverImage);
+
+        if (!fileDelele === false) throw new ApiError(500, "Internal Server error while delete CoverImage")
+    }
+
+
+    const user = await User.findByIdAndUpdate(_id,
         {
             $set: {
-                coverImage: CoverImage.url
+                coverImage: newCoverImage.url
             },
         },
         { new: true }  // new:true returns the updated doc 
