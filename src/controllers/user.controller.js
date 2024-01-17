@@ -1,6 +1,6 @@
 import { asyncHandler } from './../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js';
-import { uploadOnCloudinary } from '../utils/cloudinary.js'
+import { uploadFileOnCloudinary, deleteFileOnCloudinary } from '../utils/cloudinary.js'
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken'
 // Model import
@@ -80,9 +80,9 @@ export const registerUser = asyncHandler(async (req, res) => {
     }
 
     // Uploading file {avatar image,coverImage} to the cloudinary server 
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
+    const avatar = await uploadFileOnCloudinary(avatarLocalPath);
+    const coverImage = await uploadFileOnCloudinary(coverImageLocalPath);
+    
     // checking file is uploaded {checking avatar only because it is required field}
 
     if (!avatar) {
@@ -222,8 +222,6 @@ export const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body
 
     const { _id } = req.user[0];
-
-
     const user = await User.findOne(_id);
 
     if (!user) throw new ApiError(404, "Bad Request You are not logged")
@@ -244,25 +242,28 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 
 
 export const updateAvatar = asyncHandler(async (req, res) => {
+
     // geting files in req object because of multer middleware
     const avatarLocalPath = req.file?.path;
+
+    const { _id, avatar } = req.user[0];
+
     if (!avatarLocalPath) throw new ApiError(400, "Avatar file not saved");
 
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    const newAvatar = await uploadFileOnCloudinary(avatarLocalPath);
 
-    if (!avatar.url) throw new ApiError(500, "File not saved in cloudinary server");
+    if (!newAvatar.url) throw new ApiError(500, "File not saved in cloudinary server");
+    await deleteFileOnCloudinary(avatar)
 
-    const { _id } = req.user[0];
-    
     const user = await User.findByIdAndUpdate(_id,
         {
             $set: {
-                avatar: avatar.url
+                avatar: newAvatar.url
             },
         },
         { new: true }  // new:true returns the updated doc 
     )
-    
+
     res.status(200).json(new ApiResponse(200, { user }, "Avatar Image updated"))
 })
 
@@ -312,4 +313,60 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, user, "Account Updated"))
 
+})
+
+
+export const getUserChannelProfile = asyncHandler(async (req, res) => {
+
+    const { username } = req.params;
+    if (!username?.trim()) throw new ApiError(400, "username missing");
+
+    const channel = await User.aggregate([
+        {
+            $match: { username: username.toLowerCase() }
+        }, {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        }, {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        }, {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
+                }, channelsSubscribedToCount: {
+                    $size: "$subscribedTo"
+                }, isSubscribed: {
+                    $cond: {
+                        if: { $in: [req.user[0]?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        }, {
+            $project: {
+                fullName: 1,
+                username: 1,
+                subscribersCount: 1,
+                channelsSubscribedToCount: 1
+                , isSubscribed: 1
+                , avatar: 1,
+                coverImage: 1
+            }
+        }
+    ])
+    if (!channel?.length) throw new ApiError(404, "channel does not exists");
+
+
+    res.status(200)
+        .json(new ApiResponse(200, channel[0], "User channel fetch successfully"))
 })
