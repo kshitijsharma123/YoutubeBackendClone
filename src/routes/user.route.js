@@ -9,13 +9,19 @@ import {
     registerUser,
     updateAccountDetails,
     updateAvatar,
-    updateCoverImage
+    updateCoverImage,
+    
 } from './../controllers/user.controller.js'
+
+import { uploadVideo,uploadFileVideo } from '../controllers/video.controller.js';
 
 import { upload } from "../middlewares/multer.middleware.js"
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 const router = Router();
 
+
+
+router.route("/video").post(upload.single("video"),uploadFileVideo);
 
 router.route("/register").post(upload.fields([
     {
@@ -64,6 +70,17 @@ router
     .route("/c/:username")
     .get(getUserChannelProfile)
 
+
+router.
+    route("/upload-video").post(upload.fields([
+        {
+            name: "thumbnail",
+            maxCount: 1
+        }, {
+            name: "video",
+            maxCount: 1
+        }
+    ]), uploadVideo);
 
 
 
