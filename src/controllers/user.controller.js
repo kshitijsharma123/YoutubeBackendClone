@@ -143,8 +143,8 @@ export const loginUser = asyncHandler(async (req, res) => {
     const { AccessToken, RefreshToken } = await generateAccessAndRefreshToken(user._id);
 
     // ***********    // // Do this using obj also,once this one works
-    // const sendUser = await User.findOne(user._id).select("-password -refreshToken")
-
+    const sendUser = await User.findOne(user._id).select("-password -refreshToken")
+    
     // sending Cookie
     const options = {
         httpOnly: true,
@@ -156,7 +156,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         cookie("RefreshToken", RefreshToken, options).
         json(new ApiResponse(200,
             {
-                user,
+                sendUser,
                 AccessToken,
                 RefreshToken
             },

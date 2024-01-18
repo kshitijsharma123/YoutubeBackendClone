@@ -4,6 +4,7 @@ import { uploadFileOnCloudinary } from "../utils/cloudinary.js";
 
 import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { User } from "../models/user.model.js";
 
 export const uploadVideo = asyncHandler(async (req, res) => {
 
@@ -68,3 +69,59 @@ export const uploadFileVideo = async (req, res) => {
     console.log("\n\n\nUpload done........")
 
 }
+
+export const getVideos = asyncHandler(async (req, res) => {
+    const { username } = req.params;
+    if (!username?.trim()) throw new ApiError(400, "username missing");
+
+
+
+
+    // const videos = await User.aggregate([
+    //     { $match: { username: username } },
+    //     {
+    //       $lookup: {
+    //         from: 'videos',
+    //         localField: "_id",
+    //         foreignField: "owner",
+    //         as: "uploadedVideos"
+    //       }
+    //     }
+    //   ]);
+
+    //   console.log(videos);
+
+
+    // *** Do this using Aggerate pipeline ******
+
+    const { _id } = await User.findOne({ username });
+    const videos = await Video.find({ owner: _id })
+
+    res.status(200).json(new ApiResponse(200, videos, "Videos send successfully"));
+
+    console.log(videos);
+
+
+
+})
+
+
+
+//  *URL* /videos/:title
+export const searchVideos = asyncHandler(async (req, res) => {
+
+    const { title } = req.params;
+
+    if (!title) throw new ApiError(404, "Bad request in searchVideos ");
+
+    const searchedVideos = await Video.find(
+        {
+            title: { $regex: new RegExp(title, "i") }
+
+        }).select("-_id  -updatedAt").sort({ views: 1 })
+        .limit(10)
+
+
+    res.status(200).json(new ApiResponse(200, searchedVideos, 'searched!!'))
+
+})

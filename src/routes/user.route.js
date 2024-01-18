@@ -10,10 +10,10 @@ import {
     updateAccountDetails,
     updateAvatar,
     updateCoverImage,
-    
+
 } from './../controllers/user.controller.js'
 
-import { uploadVideo,uploadFileVideo } from '../controllers/video.controller.js';
+import { getVideos,uploadVideo, uploadFileVideo } from '../controllers/video.controller.js';
 
 import { upload } from "../middlewares/multer.middleware.js"
 import { verifyJWT } from '../middlewares/auth.middleware.js';
@@ -21,7 +21,7 @@ const router = Router();
 
 
 
-router.route("/video").post(upload.single("video"),uploadFileVideo);
+router.route("/video").post(upload.single("video"), uploadFileVideo);
 
 router.route("/register").post(upload.fields([
     {
@@ -36,8 +36,11 @@ router.route("/register").post(upload.fields([
 
 router.route("/login").post(loginUser)
 
+router.route("/c/:username/videos").get(getVideos)
 
 router.route("/refresh-token").post(refreshAccessToken);
+
+
 // secured routes (which required auth middleware)
 router.use(verifyJWT);
 
@@ -81,7 +84,6 @@ router.
             maxCount: 1
         }
     ]), uploadVideo);
-
 
 
 
