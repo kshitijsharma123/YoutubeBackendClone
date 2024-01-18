@@ -1,6 +1,6 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadFileOnCloudinary } from "../utils/cloudinary.js";
+import { deleteVideoFileOnCloudinary, uploadFileOnCloudinary } from "../utils/cloudinary.js";
 
 import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -118,10 +118,37 @@ export const searchVideos = asyncHandler(async (req, res) => {
         {
             title: { $regex: new RegExp(title, "i") }
 
-        }).select("-_id  -updatedAt").sort({ views: 1 })
+        }).select("  -updatedAt").sort({ views: 1 })
         .limit(10)
 
 
     res.status(200).json(new ApiResponse(200, searchedVideos, 'searched!!'))
 
+})
+//** URL ** /videos/delete/:id
+
+export const deleteVideo = asyncHandler(async (req, res) => {
+    // 1) User in login
+    // 2) Check if the video belongs to the user;
+    // 3) delete videofile and thumbnail file from clodinary server 
+    // 4)  delete video doc in mongodb
+    // 5) send res to the useri
+
+    const { id } = req.params;
+    const { _id } = req.user[0]
+
+    const { owner, thumbnail, videoFile } = await Video.findById(id);
+
+    if (_id === owner) throw new ApiError(401, "Can not delete a file which is not uploaded by you");
+    const deleteV = await deleteVideoFileOnCloudinary(videoFile);
+    const deleteT = await deleteVideoFileOnCloudinary(thumbnail);
+
+    // if (deleteV === false) throw new ApiError(500, "Problem Deleting Video, Try later server error");
+    // if (deleteT === false) throw new ApiError(500, "Problem Deleting thumbnail, Try later server error");
+
+    const deleteVideoDoc = await Video.findByIdAndDelete(id);
+    if (!deleteVideoDoc) throw new ApiError(500, "ERROR deleting video doc on mongodb")
+
+
+    return res.status(200).json(new ApiResponse(200, {}, "Video is deleted"));
 })

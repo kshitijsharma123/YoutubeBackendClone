@@ -20,7 +20,7 @@ import { verifyJWT } from '../middlewares/auth.middleware.js';
 const router = Router();
 
 
-
+// testing video upload url have to remove it
 router.route("/video").post(upload.single("video"), uploadFileVideo);
 
 router.route("/register").post(upload.fields([

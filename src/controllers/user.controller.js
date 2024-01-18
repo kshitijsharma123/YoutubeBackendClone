@@ -305,7 +305,7 @@ export const updateCoverImage = asyncHandler(async (req, res) => {
 
 export const updateAccountDetails = asyncHandler(async (req, res) => {
 
-    // Have to add more flieds later
+    
     const { fullName, email, } = req.body;
     const { _id } = req.user;
 

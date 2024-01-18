@@ -9,7 +9,7 @@ cloudinary.config({
 })
 
 
-const uploadFileOnCloudinary = async (localFilePath) => {
+export const uploadFileOnCloudinary = async (localFilePath) => {
 
     try {
         if (!localFilePath) return null;
@@ -31,17 +31,41 @@ const uploadFileOnCloudinary = async (localFilePath) => {
 }
 
 
-const deleteFileOnCloudinary = async (avatarURL) => {
+export const deleteFileOnCloudinary = async (fileURL) => {
     try {
 
-        const urlParts = avatarURL.split('/');
+        const urlParts = fileURL.split('/');
         const filenameWithExtension = urlParts[urlParts.length - 1];
         const public_id = filenameWithExtension.replace(/\.[^/.]+$/, '');
-        const res = await cloudinary.uploader.destroy(public_id);
-
-
-        if(res.result!=="ok") return false
         
+
+        const res = await cloudinary.uploader.destroy(public_id,{
+            resource_type:'image'
+        });
+
+
+        if (res.result !== "ok") return false
+
+    } catch (error) {
+        console.log("ERROR While deleting the file on CLoudinary\n\n\n\n", error);
+    }
+}
+
+export const deleteVideoFileOnCloudinary = async (fileURL) => {
+    try {
+
+        const urlParts = fileURL.split('/');
+        const filenameWithExtension = urlParts[urlParts.length - 1];
+        const public_id = filenameWithExtension.replace(/\.[^/.]+$/, '');
+        console.log(public_id)
+
+        const res = await cloudinary.uploader.destroy(public_id, {
+            resource_type: "video"
+        });
+
+        console.log(res)
+        if (res.result !== "ok") return false
+
     } catch (error) {
         console.log("ERROR While deleting the file on CLoudinary\n\n\n\n", error);
     }
@@ -49,5 +73,3 @@ const deleteFileOnCloudinary = async (avatarURL) => {
 
 
 
-
-export { uploadFileOnCloudinary, deleteFileOnCloudinary }

@@ -12,6 +12,14 @@ const userSchema = new Schema({
         trim: true,
         index: true // for quick Search in the DB
     },
+    isEmailVerify: {
+        type: Boolean,
+        default: false
+    },
+    emailToken: {
+        type: String
+    }
+    ,
     fullName: {
         type: String,
         required: true,
@@ -74,7 +82,7 @@ userSchema.methods.generateAccessToken = function () {
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         })
-   
+
 
 
 }
