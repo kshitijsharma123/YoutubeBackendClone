@@ -271,8 +271,8 @@ export const updateAvatar = asyncHandler(async (req, res) => {
 })
 
 export const updateCoverImage = asyncHandler(async (req, res) => {
+    
     // geting files in req object because of multer middleware
-
     const CoverImagePath = req.file?.path;
     const { _id, coverImage } = req.user[0];
 

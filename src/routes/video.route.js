@@ -5,8 +5,8 @@ const router = Router();
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 //  title?=value
-// *** do this using query
-router.route("/:title")
+
+router.route("/")
     .get(searchVideos);
 
 

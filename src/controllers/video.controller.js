@@ -107,12 +107,13 @@ export const getVideos = asyncHandler(async (req, res) => {
 
 
 
-//  *URL* /videos/:title
+//  http://localhost:8000/api/v1/videos?title=guitar
+
 export const searchVideos = asyncHandler(async (req, res) => {
 
-    const { title } = req.params;
-
-    if (!title) throw new ApiError(404, "Bad request in searchVideos ");
+    const {title} = req.query;
+  
+        if (!title) throw new ApiError(404, "Bad request in searchVideos ");
 
     const searchedVideos = await Video.find(
         {
@@ -125,6 +126,7 @@ export const searchVideos = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, searchedVideos, 'searched!!'))
 
 })
+
 //** URL ** /videos/delete/:id
 
 export const deleteVideo = asyncHandler(async (req, res) => {
@@ -140,11 +142,12 @@ export const deleteVideo = asyncHandler(async (req, res) => {
     const { owner, thumbnail, videoFile } = await Video.findById(id);
 
     if (_id === owner) throw new ApiError(401, "Can not delete a file which is not uploaded by you");
+
     const deleteV = await deleteVideoFileOnCloudinary(videoFile);
     const deleteT = await deleteVideoFileOnCloudinary(thumbnail);
 
-    // if (deleteV === false) throw new ApiError(500, "Problem Deleting Video, Try later server error");
-    // if (deleteT === false) throw new ApiError(500, "Problem Deleting thumbnail, Try later server error");
+    if (deleteV === false) throw new ApiError(500, "Problem Deleting Video, Try later server error");
+    if (deleteT === false) throw new ApiError(500, "Problem Deleting thumbnail, Try later server error");
 
     const deleteVideoDoc = await Video.findByIdAndDelete(id);
     if (!deleteVideoDoc) throw new ApiError(500, "ERROR deleting video doc on mongodb")

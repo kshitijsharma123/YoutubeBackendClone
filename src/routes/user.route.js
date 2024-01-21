@@ -17,8 +17,8 @@ import { getVideos,uploadVideo, uploadFileVideo } from '../controllers/video.con
 
 import { upload } from "../middlewares/multer.middleware.js"
 import { verifyJWT } from '../middlewares/auth.middleware.js';
-const router = Router();
 
+const router = Router();
 
 // testing video upload url have to remove it
 router.route("/video").post(upload.single("video"), uploadFileVideo);
