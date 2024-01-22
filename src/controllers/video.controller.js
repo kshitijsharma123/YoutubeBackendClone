@@ -111,19 +111,37 @@ export const getVideos = asyncHandler(async (req, res) => {
 
 export const searchVideos = asyncHandler(async (req, res) => {
 
-    const {title} = req.query;
-  
-        if (!title) throw new ApiError(404, "Bad request in searchVideos ");
+    const { title, sort } = req.query;
+
+    if (!title ) throw new ApiError(404, "Bad request in searchVideos ");
+
+    let sortOptions = { views: 1 };
+
+    if (sort) {
+
+        const fixedSortStr = sort.replace(/\s/g, '');
+    
+
+        if (fixedSortStr === "date") {
+            sortOptions = { ...sortOptions, createdAt: 1 };
+        } else if (fixedSortStr === "-date") {
+            sortOptions = { ...sortOptions, createdAt: -1 }
+        } else if (fixedSortStr === "-views") {
+            sortOptions = { views: -1 }
+        }
+
+    }
 
     const searchedVideos = await Video.find(
         {
             title: { $regex: new RegExp(title, "i") }
 
-        }).select("  -updatedAt").sort({ views: 1 })
+        }).select(" -updatedAt").sort(sortOptions)
         .limit(10)
 
 
-    res.status(200).json(new ApiResponse(200, searchedVideos, 'searched!!'))
+    res.status(200)
+        .json(new ApiResponse(200, searchedVideos, 'searched!!'))
 
 })
 
