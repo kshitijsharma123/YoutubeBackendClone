@@ -1,6 +1,6 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { deleteVideoFileOnCloudinary, uploadFileOnCloudinary } from "../utils/cloudinary.js";
+import { deleteFileOnCloudinary, deleteVideoFileOnCloudinary, uploadFileOnCloudinary } from "../utils/cloudinary.js";
 
 import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -43,10 +43,7 @@ export const uploadVideo = asyncHandler(async (req, res) => {
     res.status(201)
         .json(new ApiResponse(201, saveVideo, "Vidio is uploaded Sccussfully"))
 
-
-
 })
-
 
 function bytesToMB(bytes) {
     let kitoBytes = bytes / 1024;
@@ -113,14 +110,14 @@ export const searchVideos = asyncHandler(async (req, res) => {
 
     const { title, sort } = req.query;
 
-    if (!title ) throw new ApiError(404, "Bad request in searchVideos ");
+    if (!title) throw new ApiError(404, "Bad request in searchVideos ");
 
     let sortOptions = { views: 1 };
 
     if (sort) {
 
         const fixedSortStr = sort.replace(/\s/g, '');
-    
+
 
         if (fixedSortStr === "date") {
             sortOptions = { ...sortOptions, createdAt: 1 };
@@ -172,4 +169,85 @@ export const deleteVideo = asyncHandler(async (req, res) => {
 
 
     return res.status(200).json(new ApiResponse(200, {}, "Video is deleted"));
+})
+
+export const isPublishedStatus = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+
+    try {
+
+        const video = await Video.findById(id);
+
+        if (!video) throw new ApiError(404, "No video found")
+
+        video.isPublished = !video.isPublished;
+
+        await video.save({ validateBeforeSave: false });
+        res.status(201).json(new ApiResponse(201, {}, "Success"));
+
+    } catch (error) {
+
+        console.log({ error })
+    }
+
+})
+
+export const UpdateVideos = asyncHandler(async (req, res) => {
+
+    const { title, description } = req.body
+    const { id } = req.params;
+    const { _id } = req.user[0];
+
+    const video = await Video.findById(id);
+
+    if (_id === video.owner) throw new ApiError(404 < "Can not edit a video which is not uploaded by you")
+
+    if (!title && !description) throw new ApiError(401, "atlest one field is required");
+
+
+
+    if (title && description) {
+        video.title = title;
+        video.description = description;
+    } else if (title) {
+        video.title = title;
+
+    } else if (description) {
+        video.description = description;
+
+    }
+
+    video.save({ validateBeforeSave: false });
+
+
+    return res.status(202).json(new ApiResponse(201, {}, "Success"));
+
+
+})
+
+export const updatethumbnail = asyncHandler(async (req, res) => {
+
+    const thumbnailLocalPath = req.file?.path;
+    const { id } = req.params
+    const { _id } = req.user[0];
+
+    const video = await Video.findById(id);
+
+    if (_id === video.owner) throw new ApiError(404 < "Can not edit a video which is not uploaded by you")
+    if (!thumbnailLocalPath) throw new ApiError(500, "Server error while saving thumbnail");
+
+    const { url } = await uploadFileOnCloudinary(thumbnailLocalPath);
+
+    if (!url) throw new ApiError(500, "File not saved in cloudinary server");
+
+    const fileDelele = await deleteFileOnCloudinary(video.videoFile);
+
+    if (!fileDelele === false) throw new ApiError(500, "Internal Server error while delete old thumnail")
+
+    video.thumbnail = url;
+    video.save({ validateBeforeSave: false })
+
+return  res.status(202).json(new ApiResponse(202, {}, "Success"))
+
 })

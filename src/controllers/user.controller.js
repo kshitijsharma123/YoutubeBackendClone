@@ -256,6 +256,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
 
     // deleting the file on cloudinary
     const fileDelele = await deleteFileOnCloudinary(avatar)
+    
     if (!fileDelele === false) throw new ApiError(500, "Internal Server error while delete Olad Avatar")
 
     const user = await User.findByIdAndUpdate(_id,
