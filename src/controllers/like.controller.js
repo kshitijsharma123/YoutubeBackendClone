@@ -44,7 +44,7 @@ export const toggleCommentLike = asyncHandler(async (req, res) => {
 
 
     const { _id } = req.user[0];
-    const { id } = req.params; // video id
+    const { id } = req.params; // comment id
 
     const existingLike = await Like.findOne({ comment: id, likedBy: _id });
     try {
@@ -54,7 +54,7 @@ export const toggleCommentLike = asyncHandler(async (req, res) => {
 
         } else {
             await Like.create({
-                video: id,
+                comment: id,
                 likedBy: _id
             })
         }

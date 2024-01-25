@@ -78,7 +78,7 @@ router.
     route("/upload-video").post(upload.fields([
         {
             name: "thumbnail",
-            maxCount: 1
+            maxCount: 1 
         }, {
             name: "video",
             maxCount: 1
