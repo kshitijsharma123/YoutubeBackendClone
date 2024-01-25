@@ -96,7 +96,6 @@ export const getVideos = asyncHandler(async (req, res) => {
 
     res.status(200).json(new ApiResponse(200, videos, "Videos send successfully"));
 
-    console.log(videos);
 
 
 
