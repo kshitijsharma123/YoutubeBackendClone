@@ -2,7 +2,7 @@ import { asyncHandler } from './../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { Likevideo } from "../models/like.video.model.js";
-import {Likecomment} from '../models/like.comment.models.js'
+import { Likecomment } from '../models/like.comment.models.js'
 
 // Later create a single function  
 
@@ -81,32 +81,18 @@ export const getlikedVideos = asyncHandler(async (req, res) => {
 
     const { _id } = req.user[0];
 
-    // const likedVideos = await Like.aggregate([
-    //     { $match: { likedBy: _id } },
-    //     {
-    //         $lookup: {
-    //             from: 'videos',
-    //             localField: "video",
-    //             foreignField: "_id",
-    //             as: "likedVideos"
-    //         }
-    //     }, {
-    //         $addFields: {
-    //             likedVideosCount: {
-    //                 $size: "likedVideos"
-    //             }
-    //         }
-    //     }, {
-    //         $project: {
-    //             likedVideosCount: 1
-    //         }
-    //     }
 
-    // ])
 
-    const a = await Like.find({ likedBy: _id });
-    console.log(a)
+    const likedVideos = await Likevideo
+        .find({ likedBy: _id })
+        .populate('video')
+        .select("-_id -likedBy -createdAt -updatedAt -__v");
 
-    res.status(200).send('<h1>Working</h1>')
+
+    const numberOfLikedVideos = await Likevideo.countDocuments({ likedBy: _id });
+
+    res.status(200).json(new ApiResponse(200, { numberOfLikedVideos, likedVideos }, "Success"))
+
 
 })
+
