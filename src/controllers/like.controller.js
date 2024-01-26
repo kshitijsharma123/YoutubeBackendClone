@@ -44,8 +44,6 @@ export const toggleVideoLike = asyncHandler(async (req, res) => {
 
 export const toggleCommentLike = asyncHandler(async (req, res) => {
 
-
-
     const { _id } = req.user[0];
     const { id } = req.params; // comment id
 

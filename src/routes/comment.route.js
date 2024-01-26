@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addComment } from '../controllers/comment.controller.js';
+import { addComment,getVideoComment } from '../controllers/comment.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 const router = Router();
 
@@ -9,4 +9,7 @@ router
     .route('/video/:id')
     .post(addComment);
 
+router
+.route('/video-comment/:id')
+.get(getVideoComment)
 export default router

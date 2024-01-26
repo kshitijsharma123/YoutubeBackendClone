@@ -9,6 +9,8 @@ export const addComment = asyncHandler(async (req, res) => {
     const { content } = req.body;
     const { id } = req.params;
 
+    if (!id) throw new ApiError(403, "video Id not provided");
+
     const comment = await Comment.create({
         video: id,
         content,
@@ -19,8 +21,16 @@ export const addComment = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, { comment }, "Success"))
 
 
+})
 
+export const getVideoComment = asyncHandler(async (req, res) => {
 
+    const { id } = req.params;
+    if (!id) throw new ApiError(403, "ERROR: No Video id provided");
+    const videoComments = await Comment.find({ video: id });
 
+    if (!videoComments) res.status(200).json(new ApiResponse(200, { "result": "No Comments" }, "Suceess"));
+    const numberOfComment = videoComments.length;
+    res.status(200).json(new ApiResponse(200, { numberOfComment, videoComments }, "Success"))
 
 })
