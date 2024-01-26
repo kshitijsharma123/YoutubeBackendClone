@@ -38,13 +38,10 @@ export const getVideoComment = asyncHandler(async (req, res) => {
         })
 
 
-    console.log(videoComments)
-
-
-
-
     if (!videoComments) res.status(200).json(new ApiResponse(200, { "result": "No Comments" }, "Suceess"));
+
     const numberOfComment = videoComments.length;
+
     res.status(200).json(new ApiResponse(200, { numberOfComment, videoComments }, "Success"))
 
 })
