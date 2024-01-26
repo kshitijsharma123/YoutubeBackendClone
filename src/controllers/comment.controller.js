@@ -45,3 +45,8 @@ export const getVideoComment = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, { numberOfComment, videoComments }, "Success"))
 
 })
+
+export const updateComment = asyncHandler(async (req, res) => {
+    const { _id } = req.user[0];
+
+})

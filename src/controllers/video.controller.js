@@ -6,6 +6,7 @@ import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Likevideo } from "../models/like.video.model.js";
+import { Likecomment } from "../models/like.comment.models.js";
 
 export const uploadVideo = asyncHandler(async (req, res) => {
 
@@ -146,13 +147,13 @@ export const searchVideos = asyncHandler(async (req, res) => {
 
 // **** add if any query fail every thing should roll back **** // 
 
+// 1) User in login
+// 2) Check if the video belongs to the user;
+// 3) delete videofile and thumbnail file from clodinary server 
+// 4)  delete video doc in mongodb
+// 5) send res to the useri
+// 6) delete Likes docs and comments on the video
 export const deleteVideo = asyncHandler(async (req, res) => {
-    // 1) User in login
-    // 2) Check if the video belongs to the user;
-    // 3) delete videofile and thumbnail file from clodinary server 
-    // 4)  delete video doc in mongodb
-    // 5) send res to the useri
-    // 6) delete Likes docs and comments on the video
 
     const { id } = req.params;
     const { _id } = req.user[0]
@@ -167,8 +168,19 @@ export const deleteVideo = asyncHandler(async (req, res) => {
     if (deleteV === false) throw new ApiError(500, "Problem Deleting Video, Try later server error");
     if (deleteT === false) throw new ApiError(500, "Problem Deleting thumbnail, Try later server error");
 
-    const deleteLike = await Likevideo.deleteMany({ video: id });
-    const deleteComments = await Likevideo.deleteMany({ video: id });
+
+    const commentLike = await Likecomment.find({ video: id });
+    const commentIds = commentLike.map(el => el._id);
+
+    
+    // deleting like associated with video's comments
+    await Likecomment.deleteMany({ $in: { commentIds } });
+
+    // Deleting  Likes on Videos
+    await Likevideo.deleteMany({ video: id });
+    
+    // Deleting Comments on Videos
+    await Comment.deleteMany({ video: id });
 
 
     const deleteVideoDoc = await Video.findByIdAndDelete(id);
