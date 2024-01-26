@@ -27,7 +27,21 @@ export const getVideoComment = asyncHandler(async (req, res) => {
 
     const { id } = req.params;
     if (!id) throw new ApiError(403, "ERROR: No Video id provided");
-    const videoComments = await Comment.find({ video: id });
+
+    // This Query find comments on videos the remove fields like _id updateAt and __v the populate commentBy(userModel) and  only show username and avatar of the user ** Added a Better Solution Later **
+
+    const videoComments = await Comment.find({ video: id })
+        .select('-_id -updatedAt -__v')
+        .populate({
+            path: 'commentBy'
+            , select: 'username avatar -_id'
+        })
+
+
+    console.log(videoComments)
+
+
+
 
     if (!videoComments) res.status(200).json(new ApiResponse(200, { "result": "No Comments" }, "Suceess"));
     const numberOfComment = videoComments.length;

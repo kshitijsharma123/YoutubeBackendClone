@@ -8,7 +8,7 @@ const commentSchema = new Schema(
         },
         commentBy: {
             type: Schema.Types.ObjectId,
-            ref: "Comment"
+            ref: "User"
         },
         content: {
             type: String,
