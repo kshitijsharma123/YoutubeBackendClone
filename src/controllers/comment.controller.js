@@ -71,3 +71,24 @@ export const updateComment = asyncHandler(async (req, res) => {
     res.status(202).json(new ApiResponse(200, { resSave }, "Comment Updated"));
 
 })
+
+export const deleteComment = asyncHandler(async (req, res) => {
+    const { _id } = req.user[0];
+    const { id } = req.params
+
+    const  comment = await Comment.findById(id);
+    if (!comment) throw new ApiError(400, "NO COMMENT WITH IS ID")
+
+    if (_id.toString() !== comment.commentBy.toString()) throw new ApiError(400, "Can not delete which is not you you");
+
+    try {
+        await Comment.findByIdAndDelete(id);
+
+        res.status(200).json(200, {}, "Deleted Comment");
+
+    } catch (error) {
+        console.log(error)
+        throw new ApiError(500, "SERVER ERROR WHILE DELETEING COMMENT" + error)
+    }
+
+});
