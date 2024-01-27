@@ -1,21 +1,15 @@
 import { Schema, model } from "mongoose";
 
-const likeCommentScheme = new Schema({
-
+const likeCommentSchema = new Schema({
     likedBy: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        require: true
+        required: true
     },
-
     comment: {
         type: Schema.Types.ObjectId,
         ref: "Comment"
     },
-
-
-
 }, { timestamps: true });
 
-
-export const Likecomment = model("likecomment", likeCommentScheme);
+export const Likecomment = model("Likecomment", likeCommentSchema);

@@ -7,6 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Likevideo } from "../models/like.video.model.js";
 import { Likecomment } from "../models/like.comment.models.js";
+import { Comment } from "./../models/comment.model.js"
 
 export const uploadVideo = asyncHandler(async (req, res) => {
 
@@ -145,14 +146,9 @@ export const searchVideos = asyncHandler(async (req, res) => {
 
 //** URL ** /videos/delete/:id
 
-// **** add if any query fail every thing should roll back **** // 
+// **** add if any query fail everything should roll back **** // 
 
-// 1) User in login
-// 2) Check if the video belongs to the user;
-// 3) delete videofile and thumbnail file from clodinary server 
-// 4)  delete video doc in mongodb
-// 5) send res to the useri
-// 6) delete Likes docs and comments on the video
+
 export const deleteVideo = asyncHandler(async (req, res) => {
 
     const { id } = req.params;
@@ -162,26 +158,25 @@ export const deleteVideo = asyncHandler(async (req, res) => {
 
     if (_id === owner) throw new ApiError(401, "Can not delete a file which is not uploaded by you");
 
+    const deleteT = await deleteFileOnCloudinary(thumbnail);
     const deleteV = await deleteVideoFileOnCloudinary(videoFile);
-    const deleteT = await deleteVideoFileOnCloudinary(thumbnail);
 
     if (deleteV === false) throw new ApiError(500, "Problem Deleting Video, Try later server error");
+
     if (deleteT === false) throw new ApiError(500, "Problem Deleting thumbnail, Try later server error");
 
+    const likedComments = await Comment.find({ video: id });
+    const commentIds = likedComments.map(el => el._id);
 
-    const commentLike = await Likecomment.find({ video: id });
-    const commentIds = commentLike.map(el => el._id);
+    // Deleting like associated with video's comments
+    await Likecomment.deleteMany({ comment: { $in: commentIds } });
 
-    
-    // deleting like associated with video's comments
-    await Likecomment.deleteMany({ $in: { commentIds } });
 
     // Deleting  Likes on Videos
     await Likevideo.deleteMany({ video: id });
-    
+
     // Deleting Comments on Videos
     await Comment.deleteMany({ video: id });
-
 
     const deleteVideoDoc = await Video.findByIdAndDelete(id);
     if (!deleteVideoDoc) throw new ApiError(500, "ERROR deleting video doc on mongodb")

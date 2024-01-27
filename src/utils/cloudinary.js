@@ -37,10 +37,10 @@ export const deleteFileOnCloudinary = async (fileURL) => {
         const urlParts = fileURL.split('/');
         const filenameWithExtension = urlParts[urlParts.length - 1];
         const public_id = filenameWithExtension.replace(/\.[^/.]+$/, '');
-        
 
-        const res = await cloudinary.uploader.destroy(public_id,{
-            resource_type:'image'
+
+        const res = await cloudinary.uploader.destroy(public_id, {
+            resource_type: 'image'
         });
 
 
@@ -57,13 +57,13 @@ export const deleteVideoFileOnCloudinary = async (fileURL) => {
         const urlParts = fileURL.split('/');
         const filenameWithExtension = urlParts[urlParts.length - 1];
         const public_id = filenameWithExtension.replace(/\.[^/.]+$/, '');
-        console.log(public_id)
+        
 
         const res = await cloudinary.uploader.destroy(public_id, {
             resource_type: "video"
         });
 
-        console.log(res)
+
         if (res.result !== "ok") return false
 
     } catch (error) {
