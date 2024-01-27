@@ -156,7 +156,7 @@ export const deleteVideo = asyncHandler(async (req, res) => {
 
     const { owner, thumbnail, videoFile } = await Video.findById(id);
 
-    if (_id === owner) throw new ApiError(401, "Can not delete a file which is not uploaded by you");
+    if (_id.toString() !== owner.toString()) throw new ApiError(401, "Can not delete a file which is not uploaded by you");
 
     const deleteT = await deleteFileOnCloudinary(thumbnail);
     const deleteV = await deleteVideoFileOnCloudinary(videoFile);
@@ -215,7 +215,8 @@ export const UpdateVideos = asyncHandler(async (req, res) => {
 
     const video = await Video.findById(id);
 
-    if (_id === video.owner) throw new ApiError(404 < "Can not edit a video which is not uploaded by you")
+    if (_id.toString() !== video.owner.toString()) throw new ApiError(404 ,
+         "Can not edit a video which is not uploaded by you")
 
     if (!title && !description) throw new ApiError(401, "atlest one field is required");
 
@@ -248,7 +249,8 @@ export const updatethumbnail = asyncHandler(async (req, res) => {
 
     const video = await Video.findById(id);
 
-    if (_id === video.owner) throw new ApiError(404 < "Can not edit a video which is not uploaded by you")
+    if (_id.toString() !== video.owner.toString()) throw new ApiError(404 < "Can not edit a video which is not uploaded by you")
+    
     if (!thumbnailLocalPath) throw new ApiError(500, "Server error while saving thumbnail");
 
     const { url } = await uploadFileOnCloudinary(thumbnailLocalPath);

@@ -31,7 +31,7 @@ export const getVideoComment = asyncHandler(async (req, res) => {
     // This Query find comments on videos the remove fields like _id updateAt and __v the populate commentBy(userModel) and  only show username and avatar of the user ** Added a Better Solution Later **
 
     const videoComments = await Comment.find({ video: id })
-        .select('-_id -updatedAt -__v')
+        .select(' -updatedAt -__v')
         .populate({
             path: 'commentBy'
             , select: 'username avatar -_id'
@@ -47,6 +47,27 @@ export const getVideoComment = asyncHandler(async (req, res) => {
 })
 
 export const updateComment = asyncHandler(async (req, res) => {
+
     const { _id } = req.user[0];
+    console.log(_id)
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!id || !content) throw new ApiError(401, " Comment id or content of the commnet is not provided ");
+
+    const comment = await Comment.findById(id);
+
+    if (!comment) throw new ApiError(400, "No comment with this id");
+
+
+    if (_id.toString() !== comment.commentBy.toString()) throw new ApiError(403, "Can not Edit a Commnet which is not by you ");
+
+    comment.content = content;
+
+    const resSave = await comment.save({ validateBeforeSave: false });
+
+    if (!resSave) throw new ApiError(500, "Server ERROR");
+
+    res.status(202).json(new ApiResponse(200, { resSave }, "Comment Updated"));
 
 })
