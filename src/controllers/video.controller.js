@@ -9,6 +9,26 @@ import { Likevideo } from "../models/like.video.model.js";
 import { Likecomment } from "../models/like.comment.models.js";
 import { Comment } from "./../models/comment.model.js"
 
+
+export const videoId = asyncHandler(async (req, res) => {
+    const { id } = req.params
+
+
+    if (id === undefined) throw new ApiError(401, "Id not Present")
+
+
+    const video = await Video.findById(id).select("");
+
+    if (!video) throw new ApiError(404, "Not video found with this id")
+
+    res.status(200).json(new ApiResponse(200, video, "Success"))
+
+
+
+
+})
+
+
 export const uploadVideo = asyncHandler(async (req, res) => {
 
     const { title, description } = req.body;
@@ -137,7 +157,10 @@ export const searchVideos = asyncHandler(async (req, res) => {
 
         }).select(" -updatedAt").sort(sortOptions)
         .limit(10)
-
+        .populate({
+            path: 'owner',
+            select: 'avatar username'
+        })
 
     res.status(200)
         .json(new ApiResponse(200, searchedVideos, 'searched!!'))
@@ -215,8 +238,8 @@ export const UpdateVideos = asyncHandler(async (req, res) => {
 
     const video = await Video.findById(id);
 
-    if (_id.toString() !== video.owner.toString()) throw new ApiError(404 ,
-         "Can not edit a video which is not uploaded by you")
+    if (_id.toString() !== video.owner.toString()) throw new ApiError(404,
+        "Can not edit a video which is not uploaded by you")
 
     if (!title && !description) throw new ApiError(401, "atlest one field is required");
 
@@ -250,7 +273,7 @@ export const updatethumbnail = asyncHandler(async (req, res) => {
     const video = await Video.findById(id);
 
     if (_id.toString() !== video.owner.toString()) throw new ApiError(404 < "Can not edit a video which is not uploaded by you")
-    
+
     if (!thumbnailLocalPath) throw new ApiError(500, "Server error while saving thumbnail");
 
     const { url } = await uploadFileOnCloudinary(thumbnailLocalPath);
@@ -267,3 +290,33 @@ export const updatethumbnail = asyncHandler(async (req, res) => {
     return res.status(202).json(new ApiResponse(202, {}, "Success"))
 
 })
+
+export const getVideo = async (req, res) => {
+    try {
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+        const limit = parseInt(req.query.limit) || 10; // Default limit to 10 if not provided
+        const skip = (page - 1) * limit;
+
+        // Fetch videos with pagination and populate owner field
+        const videos = await Video.find()
+            .populate({
+                path: 'owner',
+                select: 'avatar username'
+            })
+            .select("-__v -videoFile")
+            .skip(skip)
+            .limit(limit);
+
+        // Count total videos
+        const totalVideos = await Video.countDocuments();
+
+        // Calculate total pages
+        const totalPages = Math.ceil(totalVideos / limit);
+
+        res.status(200).json(new ApiResponse(200, { videos, totalPages, currentPage: page }, "Videos sent"));
+    } catch (error) {
+        console.log(error);
+        res.status(500).json(new ApiResponse(500, null, "Internal Server Error"));
+    }
+}

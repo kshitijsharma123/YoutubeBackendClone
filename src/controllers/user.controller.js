@@ -43,7 +43,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     // 9) save the user in db 
     // 10) check user is created or not 
     // 11) Send the response {remove password and refresh token}to the user 
-
+    console.log(req.headers)
 
     const { fullName, email, username, password } = req.body
 
@@ -66,7 +66,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     // local File path of images, which is done using multer
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // const coverImageLocalPath = req.files.coverImage[0]?.path;
-
+    
 
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
@@ -119,33 +119,49 @@ export const loginUser = asyncHandler(async (req, res) => {
     //4) Compare the password,if correct when login the user and send tokens 
     // 5) send token in cookie also
 
-    const { email, username, password } = req.body
+    const { data, password } = req.body
 
 
 
-    if (!email && !username) {
+    if (!data) {
         throw new ApiError(400, "Email or Username is Required")
     }
 
     const user = await User.findOne({
-        $or: [{ email }, { username }]
+        $or: [{ email: data }, { username: data }]
     })
 
 
     if (!user) {
-        throw new ApiError(404, "User does not found")
+        return res.status(400)
+            .json(new ApiResponse(401,
+                {
+                    Data: "User not found"
+                }, "Fail"
+            ))
     }
 
     const isPasswordValued = await user.isPasswordCorrect(password);
 
-    if (!isPasswordValued) throw new ApiError(401, "Invalid User password")
+    // if (!isPasswordValued) throw new ApiError(401, "Invalid User password")
+    if (!isPasswordValued) {
+
+        return res.status(400)
+            .json(new ApiResponse(401,
+                {
+                    Data: "Password is incorrect"
+                }, "Fail"
+            ))
+    }
 
     const { AccessToken, RefreshToken } = await generateAccessAndRefreshToken(user._id);
 
     // ***********    // // Do this using obj also,once this one works
     const sendUser = await User.findOne(user._id).select("-password -refreshToken")
-    
+
     // sending Cookie
+
+    // True in Production
     const options = {
         httpOnly: true,
         secure: true
@@ -256,7 +272,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
 
     // deleting the file on cloudinary
     const fileDelele = await deleteFileOnCloudinary(avatar)
-    
+
     if (!fileDelele === false) throw new ApiError(500, "Internal Server error while delete Olad Avatar")
 
     const user = await User.findByIdAndUpdate(_id,
@@ -272,7 +288,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
 })
 
 export const updateCoverImage = asyncHandler(async (req, res) => {
-    
+
     // geting files in req object because of multer middleware
     const CoverImagePath = req.file?.path;
     const { _id, coverImage } = req.user[0];
@@ -306,7 +322,7 @@ export const updateCoverImage = asyncHandler(async (req, res) => {
 
 export const updateAccountDetails = asyncHandler(async (req, res) => {
 
-    
+
     const { fullName, email, } = req.body;
     const { _id } = req.user;
 

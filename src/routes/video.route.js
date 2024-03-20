@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { UpdateVideos, deleteVideo, isPublishedStatus, searchVideos, updatethumbnail } from '../controllers/video.controller.js';
+import { UpdateVideos, deleteVideo, isPublishedStatus, searchVideos, updatethumbnail, videoId, getVideo } from '../controllers/video.controller.js';
 const router = Router();
 import { upload } from "../middlewares/multer.middleware.js"
 
@@ -9,6 +9,11 @@ import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 router.route("/")
     .get(searchVideos);
+
+router.route("/v/:id")
+    .get(videoId);
+
+router.route("/home-video").get(getVideo)
 
 
 // secure Routes

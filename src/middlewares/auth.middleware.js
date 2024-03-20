@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
 
@@ -9,7 +10,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         const token = req.cookies?.AccessToken || req.header("Authorization")?.replace("Bearer ", "");
 
 
-        if (!token) throw new ApiError(401, "Unauthorized request")
+        if (!token) return res.status(401).json(new ApiResponse(401, "No Cookie Present"))
 
 
 

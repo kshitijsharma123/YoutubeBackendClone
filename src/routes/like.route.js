@@ -5,6 +5,7 @@ import { toggleVideoLike, toggleCommentLike, getlikedVideos } from "./../control
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 
+
 // secure Route
 router.use(verifyJWT)
 router.route("/video/:id").post(toggleVideoLike);
