@@ -25,9 +25,11 @@ export const videoId = asyncHandler(async (req, res) => {
     })
     .select("");
 
+  const likeCount = await Likevideo.countDocuments({ video: id });
+
   if (!video) throw new ApiError(404, "Not video found with this id");
 
-  res.status(200).json(new ApiResponse(200, video, "Success"));
+  res.status(200).json(new ApiResponse(200, {video, likeCount}, "Success"));
 });
 
 export const uploadVideo = asyncHandler(async (req, res) => {
